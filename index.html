@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Evolution</title>
+	<style>
+		canvas{
+			border: 2px solid black;
+		}
+
+		div{
+			display: inline-block;
+		}
+
+
+	</style>
+</head>
+<body>
+	<canvas id="cnv" ></canvas>
+	<div class="graphs">
+		<canvas id ="cnvGraphs"></canvas>
+	</div>
+	<script>
+		var cnv = document.getElementById('cnv')
+		var ctx = cnv.getContext('2d')
+		var cnv2 = document.getElementById('cnvGraphs')
+		var ctx2 = cnv2.getContext('2d')
+		var ctx3 = cnv2.getContext('2d')
+		cnv.width = 3000;
+		cnv.height = 2000;
+		cnv2.width = 1600;
+		cnv2.height = 2000;
+		var last = {
+		    x: 0,
+		    y: 0
+		};
+		var last2 = {
+		    x: 0,
+		    y: 0
+		};
+		var last3 = {
+		    x: 0,
+		    y: 0
+		};
+		var bacterium = new Image()
+		bacterium.src = 'bacteria.png';
+		var graphsFon = new Image()
+		graphsFon.src = 'graphs.png';
+		var timer = 0;
+		var graphs = []
+		var hishniki = [{
+		    x: 1800,
+		    y: 500,
+		    st: 1,
+		    bx: 0,
+		    by: 0,
+		    bd: 10000,
+		    bi: 0,
+		    time: 0,
+		    stmax: 3,
+		    speed: 1
+		}]
+		graphsFon.onload = function() {
+		    ctx2.drawImage(graphsFon, 0, 0, 800, 1000)
+		    ctx2.drawImage(graphsFon, 800, 0, 800, 1000)
+		    ctx2.drawImage(graphsFon, 0, 1000, 800, 1000)
+		    ctx2.drawImage(graphsFon, 800, 1000, 800, 1000)
+		}
+		bacterium.onload = function() {
+		    startEat()
+		    game()
+		};
+
+		var bacterii = [{
+		    x: Rand(0,3000),
+		    y: Rand(0,2000),
+		    st: 1,
+		    bx: 0,
+		    by: 0,
+		    bd: 10000,
+		    bi: 0,
+		    time: 0,
+		    stmax: 3,
+		    speed: 1
+		}] //{x:..,y:.., st:..,bx,by,bd,bi}
+	тен	var eat = [] //{x:..,y:..}
+
+		function findDistanceVector(x1, y1, x2, y2) {
+		    return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+		}
+
+		function Rand(min, max) {
+		    min = Math.ceil(min);
+		    max = Math.floor(max);
+		    return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+
+		function sqr(x) {
+		    return x * x;
+		}
+
+		function startEat() {
+		    for (let i = 0; i < 1000; i++) {
+		        eat.push({
+		            x: Rand(20, 3080),
+		            y: Rand(20, 2000)
+		        })
+		        if(i%10!=0)continue;
+		        bacterii.push({
+		    x: Rand(0,3000),
+		    y: Rand(0,2000),
+		    st: 1,
+		    bx: 0,
+		    by: 0,
+		    bd: 10000,
+		    bi: 0,
+		    time: 0,
+		    stmax: 3,
+		    speed: 1
+		})
+		    }
+		}
+
+		function game() {
+		    if (run) {
+		        upd()
+		        rnd()
+
+		        requestAnimationFrame(game)
+		    }
+		}
+		var run = true
+
+		function upd() {
+		    timer++;
+		    if (timer % 10 == 0) {
+		        ctx3.beginPath()
+
+		        ctx3.lineWidth = 7;
+		        ctx3.strokeStyle = "blue";
+		        ctx3.moveTo(last.x, last.y)
+		        ctx3.lineTo(timer / 10, 2000 - bacterii.length)
+		        ctx3.stroke()
+		        last.x = timer / 10
+		        last.y = 2000 - bacterii.length
+
+		        ctx3.beginPath()
+
+		        var serSpeed = 0
+		        for (i in bacterii) {
+		            serSpeed += bacterii[i].speed;
+		        }
+		        serSpeed /= bacterii.length
+		        ctx3.strokeStyle = "red"
+		        ctx3.moveTo(last2.x, last2.y)
+		        ctx3.lineTo(timer / 10, 2000 - serSpeed * 100)
+		        ctx3.stroke()
+		        last2.x = timer / 10
+		        last2.y = 2000 - serSpeed * 100
+
+
+		        ctx3.beginPath()
+		        ctx3.strokeStyle = "black"
+		        ctx3.moveTo(last3.x, last3.y)
+		        ctx3.lineTo(timer / 10, 2000 - hishniki.length * 10)
+		        ctx3.stroke()
+		        last3.x = timer / 10
+		        last3.y = 2000 - hishniki.length * 10
+
+		    }
+		    if (timer % 1 == 0) {
+		        eat.push({
+		            x: Rand(20, 3080),
+		            y: Rand(20, 2000)
+		        })
+
+		    }
+		    for (i in bacterii) {
+		        if (i == "bd") {
+		            continue
+		        };
+		        bacterii[i].time++
+		        var minSlen = false
+		        var minSlenx = 0;
+		        var minSleny = 0;
+		        var minSlenj = 0;
+
+		        for (j in eat) {
+		            var s = sqr(bacterii[i].x - eat[j].x) + sqr(bacterii[i].y - eat[j].y)
+
+		            if (minSlen === false || s < minSlen) {
+		                if (Math.sqrt(s) < bacterii[i].speed) {
+		                    var remuved = eat.splice(bacterii[i].bi, 1)
+		                    bacterii[i].st++;
+
+		                    bacterii[i].bx = NaN;
+		                    bacterii[i].by = NaN;
+		                    bacterii[i].bd = 10000
+		                    bacterii[i].time = 0
+		                    continue
+		                } else {
+		                    minSlen = s;
+		                    minSlenx = eat[j].x;
+		                    minSleny = eat[j].y;
+		                    minSlenj = j;
+		                }
+		            }
+
+
+		        }
+		        bacterii[i].bd = minSlen
+		        bacterii[i].bx = minSlenx
+		        bacterii[i].by = minSleny
+		        bacterii[i].bi = minSlenj
+
+		        var x1 = bacterii[i].x
+		        var y1 = bacterii[i].y
+		        var x2 = bacterii[i].bx
+		        var y2 = bacterii[i].by
+		        if (eat.length == 0) {
+		            bacterii.bd = 1000;
+		        }
+
+		        // if(timer%100 == 0){
+		        // 	console.log(x1,y1,x2,y2);
+		        // }
+
+		        if (x2 > x1 && y2 > y1) {
+
+		            //bottom right
+		            bacterii[i].x += bacterii[i].speed
+		            bacterii[i].y += bacterii[i].speed
+		            // console.log(1)
+		        } else if (x2 < x1 && y2 > y1) {
+		            //bottom left
+		            bacterii[i].x -= bacterii[i].speed
+		            bacterii[i].y += bacterii[i].speed
+		            // console.log(2)
+
+		        } else if (x2 < x1 && y2 < y1) {
+		            //top lef=speed
+		            bacterii[i].x -= bacterii[i].speed
+		            bacterii[i].y -= bacterii[i].speed
+		            // console.log(3)
+
+		        } else if (x2 > x1 && y2 < y1) {
+		            //top right
+		            bacterii[i].x += bacterii[i].speed
+		            bacterii[i].y -= bacterii[i].speed
+		            // console.log(4)
+
+		        }
+		        if (x1 == x2 && y1 < y2) {
+		            //top
+		            bacterii[i].y += bacterii[i].speed
+
+		        } else if (x1 == x2 && y1 > y2) {
+		            //bottom
+		            bacterii[i].y -= bacterii[i].speed
+		        } else if (x1 > x2 && y1 == y2) {
+		            //left
+		            bacterii[i].x -= bacterii[i].speed
+
+		        } else if (x1 < x2 && y1 == y2) {
+		            //right
+		            bacterii[i].x += bacterii[i].speed
+
+		        } else if (x1 == x2 && y1 == y2 && eat.length != 0) {
+		            var remuved = eat.splice(bacterii[i].bi, 1)
+		            bacterii[i].st++;
+		            // console.log(2 , x1,y1,x2,y2);
+
+		            bacterii[i].bx = NaN;
+		            bacterii[i].by = NaN;
+		            bacterii[i].bd = 10000
+		            bacterii[i].time = 0
+		        }
+
+		        if (bacterii[i].st == bacterii[i].stmax) {
+		            
+
+		            var speed = Rand(3, 5)
+		            bacterii.push({
+		                x: bacterii[i].x - 10,
+		                y: bacterii[i].y - 10,
+		                st: 3,
+		                bx: NaN,
+		                by: NaN,
+		                bd: 10000,
+		                bi: 0,
+		                speed: speed,
+		                stmax: speed/2
+		            })
+		            console.log( i , bacterii[i].st);
+		            bacterii[i].st = 1
+		        }
+		        if (bacterii[i].time == 1000) {
+		            bacterii.splice(i, 1)
+		        }
+		        // if(bacterii[i].bd<10){
+		        // 	bacterii[i].bx = NaN;
+		        // 	bacterii[i].by = NaN;
+		        // 	var remuved = eat.splice(bacterii[i].bi , 1)
+		        // 	bacterii[i].st++;
+		        // 	console.log(1 ,bacterii[i].bd );
+		        // 	bacterii[i].bd = 10000												
+		        // }
+		    }
+
+		    for (i in hishniki) {
+		        if (i == "bd") {
+		            continue
+		        };
+		        hishniki[i].time++
+		        var minSlen = false
+		        var minSlenx = 0;
+		        var minSleny = 0;
+		        var minSlenj = 0;
+
+		        for (j in bacterii) {
+		            var s = sqr(hishniki[i].x - bacterii[j].x) + sqr(hishniki[i].y - bacterii[j].y)
+
+		            if (minSlen === false || s < minSlen) {
+		                if (Math.sqrt(s) < hishniki[i].speed || Math.sqrt(s) < 40) {
+		                    var remuved = bacterii.splice(hishniki[i].bi, 1)
+		                    hishniki[i].st++;
+		                    console.log(2);
+
+		                    hishniki[i].bx = NaN;
+		                    hishniki[i].by = NaN;
+		                    hishniki[i].bd = 10000
+		                    hishniki[i].time = 0
+		                    continue
+		                } else {
+		                    minSlen = s;
+		                    minSlenx = bacterii[j].x;
+		                    minSleny = bacterii[j].y;
+		                    minSlenj = j;
+		                }
+		            }
+
+
+		        }
+		        hishniki[i].bd = minSlen
+		        hishniki[i].bx = minSlenx
+		        hishniki[i].by = minSleny
+		        hishniki[i].bi = minSlenj
+
+		        var x1 = hishniki[i].x
+		        var y1 = hishniki[i].y
+		        var x2 = hishniki[i].bx
+		        var y2 = hishniki[i].by
+		        if (bacterii.length == 0) {
+		            hishniki.bd = 1000;
+		        }
+
+		        // if(timer%100 == 0){
+		        // 	console.log(x1,y1,x2,y2);
+		        // }
+
+		        if (x2 > x1 && y2 > y1) {
+
+		            //bottom right
+		            hishniki[i].x += hishniki[i].speed
+		            hishniki[i].y += hishniki[i].speed
+		            // console.log(1)
+		        } else if (x2 < x1 && y2 > y1) {
+		            //bottom left
+		            hishniki[i].x -= hishniki[i].speed
+		            hishniki[i].y += hishniki[i].speed
+		            // console.log(2)
+
+		        } else if (x2 < x1 && y2 < y1) {
+		            //top lef=speed
+		            hishniki[i].x -= hishniki[i].speed
+		            hishniki[i].y -= hishniki[i].speed
+		            // console.log(3)
+
+		        } else if (x2 > x1 && y2 < y1) {
+		            //top right
+		            hishniki[i].x += hishniki[i].speed
+		            hishniki[i].y -= hishniki[i].speed
+		            // console.log(4)
+
+		        }
+		        if (x1 == x2 && y1 < y2) {
+		            //top
+		            hishniki[i].y += hishniki[i].speed
+
+		        } else if (x1 == x2 && y1 > y2) {
+		            //bottom
+		            hishniki[i].y -= hishniki[i].speed
+		        } else if (x1 > x2 && y1 == y2) {
+		            //left
+		            hishniki[i].x -= hishniki[i].speed
+
+		        } else if (x1 < x2 && y1 == y2) {
+		            //right
+		            hishniki[i].x += hishniki[i].speed
+
+		        } else if (x1 == x2 && y1 == y2 && bacterii.length != 0) {
+		            var remuved = bacterii.splice(hishniki[i].bi, 1)
+		            hishniki[i].st++;
+		            // console.log(2 , x1,y1,x2,y2);
+
+		            hishniki[i].bx = NaN;
+		            hishniki[i].by = NaN;
+		            hishniki[i].bd = 10000
+		            hishniki[i].time = 0
+		        }
+
+		        if (hishniki[i].st >= hishniki[i].stmax) {
+		            hishniki[i].st = 1
+
+		            var speed = Rand(1, 4)
+		            hishniki.push({
+		                x: hishniki[i].x - 10,
+		                y: hishniki[i].y - 10,
+		                st: 3,
+		                bx: NaN,
+		                by: NaN,
+		                bd: 10000,
+		                bi: 0,
+		                speed: speed,
+		                time: 0,
+		                stmax: 10 * speed
+		            })
+		            // console.log(hishniki[i].x - 10, hishniki[i].bd, i);
+		        }
+		        if (hishniki[i].time == 1000) {
+		            hishniki.splice(i, 1)
+		        }
+		        // if(bacterii[i].bd<10){
+		        // 	bacterii[i].bx = NaN;
+		        // 	bacterii[i].by = NaN;
+		        // 	var remuved = eat.splice(bacterii[i].bi , 1)
+		        // 	bacterii[i].st++;
+		        // 	console.log(1 ,bacterii[i].bd );
+		        // 	bacterii[i].bd = 10000												
+		        // }
+		    }
+
+
+		}
+
+		function rnd() {
+		    ctx.clearRect(0, 0, 3000, 2000)
+		    for (i in bacterii) {
+		        ctx.beginPath()
+
+		        ctx.drawImage(bacterium, bacterii[i].x, bacterii[i].y, 20, 20)
+		    }
+		    for (i in eat) {
+		        ctx.beginPath()
+		        ctx.fillStyle = "red";
+		        ctx.arc(eat[i].x, eat[i].y, 5, 0, Math.PI * 2)
+		        ctx.fill()
+		    }
+		    for (i in hishniki) {
+		        ctx.beginPath()
+		        ctx.fillStyle = "black";
+		        ctx.arc(hishniki[i].x, hishniki[i].y, 40, 0, Math.PI * 2)
+		        ctx.fill()
+		    }
+		}
+
+
+
+		document.addEventListener("keydown", function(e) {
+		    if (e.code == 'Space') {
+		        if (run) {
+		            run = !run
+		        } else {
+		            run = !run
+		            game()
+		        }
+		    }
+		})
+
+		// document.addEventListener("mousemove",function (e) {
+		// 	eat.push({x:e.offsetX,y:e.offsetY})
+		// })
+	</script>
+</body>
+</html>
